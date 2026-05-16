@@ -1,0 +1,1193 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>English Chévere</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <!-- GSAP drives ALL card transforms (no CSS transitions on cards → no conflict) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      :root {
+        --bg: #07070a;
+        --orange: #ff8a4c;
+        --text: #ffffff;
+        --muted: rgba(255, 255, 255, 0.4);
+        --font: "Outfit", sans-serif;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: var(--bg);
+        font-family: var(--font);
+        color: var(--text);
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
+      /* ═══════════ CINEMATIC BACKGROUND ═══════════ */
+      #bg {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        background:
+        /* tight warm core right behind the card top */
+          radial-gradient(
+            ellipse 38% 26% at 50% 30%,
+            rgba(255, 140, 70, 0.3) 0%,
+            transparent 60%
+          ),
+          /* broader amber halo */
+          radial-gradient(
+              ellipse 70% 46% at 50% 22%,
+              rgba(255, 105, 40, 0.16) 0%,
+              transparent 68%
+            ),
+          /* deep base */
+          radial-gradient(ellipse 120% 100% at 50% 40%, #131015 0%, #07070a 70%);
+      }
+      /* heavy cinematic vignette — pushes focus to centre */
+      #vignette {
+        position: fixed;
+        inset: 0;
+        z-index: 4;
+        pointer-events: none;
+        background:
+          radial-gradient(
+            ellipse 75% 70% at 50% 46%,
+            transparent 40%,
+            rgba(0, 0, 0, 0.55) 100%
+          ),
+          linear-gradient(
+            180deg,
+            rgba(0, 0, 0, 0.45) 0%,
+            transparent 22%,
+            transparent 72%,
+            rgba(0, 0, 0, 0.55) 100%
+          );
+      }
+      /* film grain for rendered-shot texture */
+      #grain {
+        position: fixed;
+        inset: -50%;
+        z-index: 5;
+        pointer-events: none;
+        opacity: 0.05;
+        mix-blend-mode: overlay;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+      }
+      .orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(120px);
+        pointer-events: none;
+        will-change: transform, opacity;
+      }
+      .orb-1 {
+        width: 460px;
+        height: 300px;
+        top: 6%;
+        left: 50%;
+        margin-left: -230px;
+        background: radial-gradient(
+          circle,
+          rgba(255, 130, 60, 0.2) 0%,
+          transparent 70%
+        );
+      }
+      .orb-2 {
+        width: 280px;
+        height: 280px;
+        bottom: 8%;
+        right: -12%;
+        background: radial-gradient(
+          circle,
+          rgba(255, 70, 20, 0.07) 0%,
+          transparent 70%
+        );
+      }
+
+      /* ═══════════ HEADER ═══════════ */
+      #header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 20;
+        padding: max(25px, env(safe-area-inset-top)) 0 0;
+        display: flex;
+        justify-content: center;
+      }
+      .logo {
+        line-height: 1.12;
+        text-align: center;
+        filter: drop-shadow(0 2px 14px rgba(255, 120, 50, 0.35));
+      }
+      .logo-en,
+      .logo-ch {
+        display: block;
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+      }
+      .logo-en {
+        color: #fff;
+      }
+      .logo-ch {
+        color: var(--orange);
+      }
+
+      /* ═══════════ APP / STACK ═══════════ */
+      #app {
+        position: relative;
+        z-index: 2;
+        width: 100%;
+        height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        /* reserve the header band (top) and the controls band (bottom)
+           so the centred card never collides with the buttons */
+        padding: 84px 0 196px;
+      }
+      #stack {
+        position: relative;
+        width: min(360px, calc(100vw - 48px));
+        /* adapt to viewport, but stay within the safe band */
+        height: clamp(380px, calc(100dvh - 300px), 560px);
+        touch-action: none;
+      }
+
+      /* ═══════════ CARD — premium glass surface ═══════════ */
+      .card {
+        position: absolute;
+        inset: 0;
+        border-radius: 32px;
+        /* translucent so the warm bloom seeps through the glass */
+        background: linear-gradient(
+          158deg,
+          rgba(34, 30, 38, 0.78) 0%,
+          rgba(20, 19, 25, 0.82) 48%,
+          rgba(13, 12, 17, 0.86) 100%
+        );
+        backdrop-filter: blur(14px) saturate(135%);
+        -webkit-backdrop-filter: blur(14px) saturate(135%);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        box-shadow:
+        /* warm rim light */
+          0 0 0 1px rgba(255, 130, 60, 0.1),
+          0 1px 1px rgba(255, 160, 90, 0.14) inset,
+          0 -1px 18px rgba(255, 110, 40, 0.1) inset,
+          /* crisp inner top highlight */ 0 1px 0 rgba(255, 255, 255, 0.06)
+            inset,
+          /* contained outer glow */ 0 0 30px rgba(255, 110, 40, 0.12),
+          /* deep float shadow */ 0 30px 70px rgba(0, 0, 0, 0.7),
+          0 8px 24px rgba(0, 0, 0, 0.55);
+        display: flex;
+        flex-direction: column;
+        padding: 38px 30px 30px;
+        overflow: hidden;
+        will-change: transform, opacity, filter;
+        transform-origin: 50% 118%; /* fan from bottom like a real deck */
+        backface-visibility: hidden;
+      }
+      .card-front {
+        cursor: grab;
+      }
+      .card-front:active {
+        cursor: grabbing;
+      }
+
+      /* top sheen — soft light raking across the glass */
+      .card .sheen {
+        position: absolute;
+        inset: 0;
+        border-radius: 32px;
+        pointer-events: none;
+        background: radial-gradient(
+          ellipse 90% 50% at 30% -10%,
+          rgba(255, 170, 110, 0.1) 0%,
+          transparent 55%
+        );
+      }
+      /* dot grid decoration */
+      .card .dots {
+        position: absolute;
+        top: 26px;
+        right: 26px;
+        width: 64px;
+        height: 48px;
+        pointer-events: none;
+        background-image: radial-gradient(
+          circle,
+          rgba(255, 138, 76, 0.35) 1px,
+          transparent 1px
+        );
+        background-size: 9px 9px;
+        opacity: 0.4;
+      }
+      /* giant ghost quote mark */
+      .card .quote {
+        position: absolute;
+        right: 16px;
+        bottom: 70px;
+        font-size: 210px;
+        line-height: 1;
+        font-weight: 800;
+        color: rgba(255, 255, 255, 0.018);
+        pointer-events: none;
+        font-family: var(--font);
+      }
+
+      /* ═══════════ CARD CONTENT ═══════════ */
+      .card-cat {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin-bottom: 26px;
+        position: relative;
+      }
+      .cat-icon {
+        width: 18px;
+        height: 18px;
+        color: var(--orange);
+        flex-shrink: 0;
+        filter: drop-shadow(0 0 6px rgba(255, 130, 60, 0.5));
+      }
+      .cat-label {
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        color: var(--orange);
+        text-transform: uppercase;
+      }
+
+      .card-q {
+        flex: 1;
+        position: relative;
+        font-size: clamp(30px, 5.4vw, 28px);
+        font-weight: 700;
+        line-height: 1.32;
+        letter-spacing: -0.02em;
+        color: #fff;
+        text-shadow: 0 2px 20px rgba(0, 0, 0, 0.4);
+      }
+
+      .card-footer {
+        margin-top: 26px;
+        position: relative;
+      }
+      .card-brand {
+        margin-bottom: 18px;
+        line-height: 1.12;
+      }
+      .cb-en,
+      .cb-ch {
+        display: block;
+        font-size: 12.5px;
+        font-weight: 800;
+      }
+      .cb-en {
+        color: #fff;
+      }
+      .cb-ch {
+        color: var(--orange);
+      }
+
+      .sp-divider {
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          rgba(255, 138, 76, 0.35),
+          transparent
+        );
+        margin-bottom: 14px;
+      }
+      .sp-label {
+        font-size: 9.5px;
+        color: var(--muted);
+        letter-spacing: 0.06em;
+        margin-bottom: 10px;
+      }
+      .sp-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .sp-logo {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 50% 35%, #1e1d24, #0e0d12);
+        border: 1px solid rgba(255, 138, 76, 0.32);
+        box-shadow:
+          0 0 16px rgba(255, 110, 40, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .sp-logo svg {
+        width: 18px;
+        height: 18px;
+        color: var(--orange);
+      }
+      .sp-handle {
+        font-size: 13px;
+        font-weight: 600;
+        color: #fff;
+      }
+      .sp-tagline {
+        font-size: 10.5px;
+        color: var(--orange);
+        margin-top: 2px;
+      }
+
+      /* swipe stamp */
+      .stamp {
+        position: absolute;
+        top: 30px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 5px 12px;
+        border-radius: 7px;
+        border: 2px solid var(--orange);
+        color: var(--orange);
+        box-shadow: 0 0 16px rgba(255, 130, 60, 0.4);
+        opacity: 0;
+        pointer-events: none;
+      }
+      .stamp-r {
+        right: 22px;
+      }
+      .stamp-l {
+        left: 22px;
+      }
+
+      /* ═══════════ CONTROLS ═══════════ */
+      #controls {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 20;
+        padding-bottom: max(32px, env(safe-area-inset-bottom));
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 18px;
+      }
+      #nav-top {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+      }
+
+      .arr-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--orange);
+        opacity: 0.55;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        filter: drop-shadow(0 0 8px rgba(255, 130, 60, 0.35));
+        transition:
+          opacity 0.2s,
+          transform 0.2s;
+      }
+      .arr-btn:hover {
+        opacity: 1;
+      }
+      .arr-btn:active {
+        transform: scale(0.85);
+      }
+      .arr-btn svg {
+        width: 22px;
+        height: 22px;
+        display: block;
+      }
+
+      #btn-next {
+        padding: 16px 38px;
+        background: rgba(255, 255, 255, 0.04);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 100px;
+        font-family: var(--font);
+        font-size: 10.5px;
+        font-weight: 600;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.45);
+        box-shadow:
+          0 8px 24px rgba(0, 0, 0, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        cursor: pointer;
+        transition:
+          background 0.2s,
+          color 0.2s,
+          border-color 0.2s;
+      }
+      #btn-next:hover {
+        background: rgba(255, 255, 255, 0.07);
+        color: rgba(255, 255, 255, 0.7);
+        border-color: rgba(255, 138, 76, 0.25);
+      }
+
+      #nav-back {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(8px);
+        transition:
+          opacity 0.32s ease,
+          transform 0.32s ease;
+      }
+      #nav-back.show {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
+      }
+      #btn-back {
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle at 50% 35%,
+          rgba(255, 138, 76, 0.14),
+          rgba(255, 138, 76, 0.05)
+        );
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 138, 76, 0.3);
+        color: var(--orange);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow:
+          0 0 20px rgba(255, 110, 40, 0.2),
+          0 8px 20px rgba(0, 0, 0, 0.4);
+        transition:
+          background 0.2s,
+          border-color 0.2s,
+          transform 0.2s;
+      }
+      #btn-back:hover {
+        border-color: rgba(255, 138, 76, 0.5);
+      }
+      #btn-back:active {
+        transform: scale(0.9);
+      }
+      #btn-back svg {
+        width: 21px;
+        height: 21px;
+      }
+      .back-label {
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      /* ═══════════ END SCREEN ═══════════ */
+      #end {
+        position: absolute;
+        inset: 0;
+        z-index: 40;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.5s ease;
+      }
+      #end.show {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .end-mark {
+        font-size: 28px;
+        color: var(--orange);
+        filter: drop-shadow(0 0 14px rgba(255, 130, 60, 0.6));
+        margin-bottom: 4px;
+      }
+      #end p {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--muted);
+      }
+      #btn-restart {
+        margin-top: 14px;
+        padding: 15px 34px;
+        background: radial-gradient(
+          circle at 50% 0%,
+          rgba(255, 138, 76, 0.18),
+          rgba(255, 138, 76, 0.07)
+        );
+        border: 1px solid rgba(255, 138, 76, 0.3);
+        border-radius: 100px;
+        font-family: var(--font);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--orange);
+        cursor: pointer;
+        box-shadow: 0 0 22px rgba(255, 110, 40, 0.22);
+        transition: background 0.2s;
+      }
+      #btn-restart:hover {
+        background: radial-gradient(
+          circle at 50% 0%,
+          rgba(255, 138, 76, 0.28),
+          rgba(255, 138, 76, 0.12)
+        );
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="bg">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+    </div>
+
+    <div id="app">
+      <div id="stack">
+        <!-- 3 recycled card elements; roles rotate, front never re-rendered while visible -->
+        <div class="card" id="cA"></div>
+        <div class="card" id="cB"></div>
+        <div class="card" id="cC"></div>
+
+        <div id="end">
+          <div class="end-mark">✦</div>
+          <p>You've seen all the cards</p>
+          <button id="btn-restart">Start over</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="vignette"></div>
+    <div id="grain"></div>
+
+    <header id="header">
+      <div class="logo">
+        <span class="logo-en">English</span>
+        <span class="logo-ch">chévere</span>
+      </div>
+    </header>
+
+    <div id="controls">
+      <div id="nav-top">
+        <button class="arr-btn" id="btn-left" aria-label="Next">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="11 17 6 12 11 7" />
+            <polyline points="18 17 13 12 18 7" />
+          </svg>
+        </button>
+        <button id="btn-next">Swipe to next</button>
+        <button class="arr-btn" id="btn-right" aria-label="Next">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="13 17 18 12 13 7" />
+            <polyline points="6 17 11 12 6 7" />
+          </svg>
+        </button>
+      </div>
+      <div id="nav-back">
+        <button id="btn-back" aria-label="Go back">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+        <span class="back-label">Back</span>
+      </div>
+    </div>
+
+    <script>
+      // ─── DATA ─────────────────────────────────────────────────────────────────────
+      const CARDS = [
+        {
+          cat: "LIFE",
+          icon: "person",
+          q: "If money and time were no object, what skill would you master tomorrow?",
+          sp: { h: "@coffeelab", t: "Great coffee, better talks." },
+        },
+        {
+          cat: "HABITS",
+          icon: "leaf",
+          q: "Are you a planner or do you prefer to see where the day takes you?",
+          sp: null,
+        },
+        {
+          cat: "ROUTINES",
+          icon: "sun",
+          q: "What's your dream morning routine?",
+          sp: { h: "@morningbrew", t: "Start every day inspired." },
+        },
+        {
+          cat: "CHOICES",
+          icon: "split",
+          q: "Would you rather live without music or without internet?",
+          sp: null,
+        },
+        {
+          cat: "CONNECTION",
+          icon: "chat",
+          q: "What's the best conversation you've had this week?",
+          sp: { h: "@coffeelab", t: "Great coffee, better talks." },
+        },
+        {
+          cat: "LANGUAGE",
+          icon: "globe",
+          q: "If you could master any language in 30 days, which would it be and why?",
+          sp: null,
+        },
+        {
+          cat: "GROWTH",
+          icon: "arrow",
+          q: "What's one habit you wish you'd started 5 years ago?",
+          sp: null,
+        },
+        {
+          cat: "MINDSET",
+          icon: "mind",
+          q: "Do you believe people can truly change, or do they just adapt?",
+          sp: { h: "@morningbrew", t: "Start every day inspired." },
+        },
+        {
+          cat: "LIFE",
+          icon: "person",
+          q: "When did you last do something for the very first time?",
+          sp: null,
+        },
+        {
+          cat: "CHOICES",
+          icon: "split",
+          q: "If you could only keep three apps on your phone, which would you choose?",
+          sp: { h: "@coffeelab", t: "Great coffee, better talks." },
+        },
+      ];
+
+      const ICONS = {
+        person: `<svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`,
+        leaf: `<svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8C8 10 5.9 16.17 3.82 19.37A1 1 0 0 0 4.76 21C12 21 19 15.55 19 8z"/><path d="M17 8l-1.36 8.17"/></svg>`,
+        sun: `<svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M18.66 5.34l1.41-1.41"/></svg>`,
+        split: `<svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2"/><circle cx="18" cy="19" r="2"/><circle cx="6" cy="12" r="2"/><line x1="8" y1="12" x2="16" y2="5"/><line x1="8" y1="12" x2="16" y2="19"/></svg>`,
+        chat: `<svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+        globe: `<svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`,
+        arrow: `<svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>`,
+        mind: `<svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.46 2.5 2.5 0 0 1-1.07-4.6A3 3 0 1 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 1.07-4.6A3 3 0 1 0 14.5 2Z"/></svg>`,
+      };
+      const CUP = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>`;
+
+      // ─── SLOTS — fanned deck geometry + depth-of-field blur (0 = front) ───────────
+      const SLOTS = [
+        { x: 0, y: 0, scale: 1, rot: 0, o: 1, blur: 0 },
+        { x: 0, y: -22, scale: 0.955, rot: 3.4, o: 0.5, blur: 1.6 },
+        { x: 0, y: -42, scale: 0.91, rot: 6.8, o: 0.22, blur: 3.0 },
+      ];
+
+      // ─── DOM ──────────────────────────────────────────────────────────────────────
+      const els = [
+        document.getElementById("cA"),
+        document.getElementById("cB"),
+        document.getElementById("cC"),
+      ];
+      const stackEl = document.getElementById("stack");
+      const endEl = document.getElementById("end");
+      const navBack = document.getElementById("nav-back");
+      const btnBack = document.getElementById("btn-back");
+      const btnNext = document.getElementById("btn-next");
+      const btnLeft = document.getElementById("btn-left");
+      const btnRight = document.getElementById("btn-right");
+      const btnRestart = document.getElementById("btn-restart");
+
+      // ─── STATE ────────────────────────────────────────────────────────────────────
+      let stack = [...els]; // stack[0]=front, [1]=mid, [2]=back
+      let deck = [],
+        idx = 0,
+        prevIdx = null,
+        busy = false,
+        dead = false;
+
+      // ─── HELPERS ──────────────────────────────────────────────────────────────────
+      const shuffle = (a) => {
+        const b = [...a];
+        for (let i = b.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [b[i], b[j]] = [b[j], b[i]];
+        }
+        return b;
+      };
+
+      function buildHTML(d) {
+        const sp = d.sp
+          ? `
+    <div class="sp-divider"></div>
+    <p class="sp-label">Sponsored by</p>
+    <div class="sp-row">
+      <div class="sp-logo">${CUP}</div>
+      <div>
+        <div class="sp-handle">${d.sp.h}</div>
+        <div class="sp-tagline">${d.sp.t}</div>
+      </div>
+    </div>`
+          : "";
+        return `
+    <div class="sheen"></div>
+    <div class="dots"></div>
+    <div class="quote">&rdquo;</div>
+    <div class="stamp stamp-r">Next</div>
+    <div class="stamp stamp-r">Next</div>
+    <div class="card-cat">
+      ${ICONS[d.icon] || ICONS.person}
+      <span class="cat-label">${d.cat}</span>
+    </div>
+    <p class="card-q">${d.q}</p>
+    <div class="card-footer">
+      <div class="card-brand">
+        <span class="cb-en">English</span>
+        <span class="cb-ch">chévere</span>
+      </div>
+      ${sp}
+    </div>`;
+      }
+
+      function render(el, cardIdx) {
+        const d = deck[cardIdx];
+        el.style.display = d ? "" : "none";
+        if (d) el.innerHTML = buildHTML(d);
+      }
+
+      // place element at a slot instantly
+      function placeAt(el, s, extra = {}) {
+        gsap.set(
+          el,
+          Object.assign(
+            {
+              x: s.x,
+              y: s.y,
+              scale: s.scale,
+              rotation: s.rot,
+              opacity: s.o,
+              filter: `blur(${s.blur}px)`,
+            },
+            extra,
+          ),
+        );
+      }
+
+      // CRITICAL FIX: z-index must follow role rotation, not stay where placeAt left it
+      function applyZ() {
+        gsap.set(stack[0], { zIndex: 30 });
+        gsap.set(stack[1], { zIndex: 20 });
+        gsap.set(stack[2], { zIndex: 10 });
+        els.forEach((e) => e.classList.remove("card-front"));
+        stack[0].classList.add("card-front");
+      }
+
+      function refreshBack() {
+        if (prevIdx !== null && !dead) navBack.classList.add("show");
+        else navBack.classList.remove("show");
+      }
+
+      function layoutInstant() {
+        stack = [...els];
+        render(stack[0], idx);
+        render(stack[1], idx + 1);
+        render(stack[2], idx + 2);
+        placeAt(stack[0], SLOTS[0]);
+        placeAt(stack[1], SLOTS[1], {
+          opacity: deck[idx + 1] ? SLOTS[1].o : 0,
+        });
+        placeAt(stack[2], SLOTS[2], {
+          opacity: deck[idx + 2] ? SLOTS[2].o : 0,
+        });
+        applyZ();
+      }
+
+      // ─── INIT ─────────────────────────────────────────────────────────────────────
+      function init() {
+        gsap.killTweensOf(els);
+        deck = shuffle(CARDS);
+        idx = 0;
+        prevIdx = null;
+        busy = false;
+        dead = false;
+
+        endEl.classList.remove("show");
+        navBack.classList.remove("show");
+
+        layoutInstant();
+
+        gsap.from(stack[0], {
+          y: 48,
+          opacity: 0,
+          scale: 0.95,
+          duration: 0.65,
+          ease: "power3.out",
+          delay: 0.05,
+        });
+        gsap.from(stack[1], {
+          y: 6,
+          opacity: 0,
+          duration: 0.65,
+          ease: "power3.out",
+          delay: 0.15,
+        });
+        gsap.from(stack[2], {
+          y: 2,
+          opacity: 0,
+          duration: 0.65,
+          ease: "power3.out",
+          delay: 0.22,
+        });
+      }
+
+      // ─── GO NEXT ──────────────────────────────────────────────────────────────────
+      function goNext(dir) {
+        if (busy || dead) return;
+
+        const nextIdx = idx + 1;
+        if (nextIdx >= deck.length) {
+          busy = true;
+          const fx = dir === "left" ? -740 : 740;
+          gsap.to(stack[0], {
+            x: fx,
+            rotation: dir === "left" ? -22 : 22,
+            opacity: 0,
+            duration: 0.42,
+            ease: "power2.in",
+            onComplete() {
+              dead = true;
+              busy = false;
+              els.forEach((e) => gsap.set(e, { opacity: 0 }));
+              endEl.classList.add("show");
+              navBack.classList.remove("show");
+            },
+          });
+          gsap.to([stack[1], stack[2]], { opacity: 0, duration: 0.3 });
+          return;
+        }
+
+        busy = true;
+        prevIdx = idx;
+
+        const front = stack[0],
+          mid = stack[1],
+          back = stack[2];
+        const fx = dir === "left" ? -740 : 740;
+        const frot = dir === "left" ? -22 : 22;
+        idx = nextIdx;
+
+        const tl = gsap.timeline({
+          onComplete() {
+            // recycle thrown card to deepest slot with new content (hidden behind others)
+            render(front, idx + 2);
+            placeAt(front, SLOTS[2], { opacity: 0 });
+            stack = [mid, back, front]; // rotate roles
+            applyZ(); // ← reassign z-index to new roles (the bug fix)
+            gsap.to(front, {
+              opacity: deck[idx + 2] ? SLOTS[2].o : 0,
+              duration: 0.25,
+            });
+            busy = false;
+            refreshBack();
+          },
+        });
+
+        tl.to(
+          front,
+          {
+            x: fx,
+            rotation: frot,
+            opacity: 0,
+            duration: 0.44,
+            ease: "power2.in",
+          },
+          0,
+        )
+          .to(
+            mid,
+            {
+              x: SLOTS[0].x,
+              y: SLOTS[0].y,
+              scale: SLOTS[0].scale,
+              rotation: SLOTS[0].rot,
+              opacity: 1,
+              filter: "blur(0px)",
+              duration: 0.48,
+              ease: "power3.out",
+            },
+            0,
+          )
+          .to(
+            back,
+            {
+              x: SLOTS[1].x,
+              y: SLOTS[1].y,
+              scale: SLOTS[1].scale,
+              rotation: SLOTS[1].rot,
+              opacity: deck[idx + 1] ? SLOTS[1].o : 0,
+              filter: `blur(${SLOTS[1].blur}px)`,
+              duration: 0.48,
+              ease: "power3.out",
+            },
+            0,
+          );
+      }
+
+      // ─── GO BACK (one step only) ──────────────────────────────────────────────────
+      function goBack() {
+        if (busy || prevIdx === null || dead) return;
+        busy = true;
+
+        // Roles BEFORE: oldFront=deck[idx], oldMid=deck[idx+1], oldBack=deck[idx+2]
+        // After going back: front=deck[idx-1], mid=deck[idx] (recede the old
+        // front — DON'T discard it), back=deck[idx+1].
+        const oldFront = stack[0],
+          oldMid = stack[1],
+          incoming = stack[2]; // deepest/least visible → reuse as restored card
+
+        idx = prevIdx;
+        prevIdx = null;
+
+        // restored previous card enters from the left, ON TOP of everything
+        render(incoming, idx);
+        placeAt(incoming, SLOTS[0], { x: -140, rotation: -9, opacity: 0 });
+        gsap.set(incoming, { zIndex: 40 });
+
+        const tl = gsap.timeline({
+          onComplete() {
+            stack = [incoming, oldFront, oldMid]; // rotate roles
+            applyZ(); // ← normalise z-index to new roles
+            busy = false;
+            refreshBack();
+          },
+        });
+
+        // incoming slides into front
+        tl.to(
+          incoming,
+          {
+            x: SLOTS[0].x,
+            y: SLOTS[0].y,
+            scale: SLOTS[0].scale,
+            rotation: SLOTS[0].rot,
+            opacity: 1,
+            filter: "blur(0px)",
+            duration: 0.5,
+            ease: "power3.out",
+          },
+          0,
+        )
+          // old front recedes to the mid slot (content stays = deck[idx+1] ✓)
+          .to(
+            oldFront,
+            {
+              x: SLOTS[1].x,
+              y: SLOTS[1].y,
+              scale: SLOTS[1].scale,
+              rotation: SLOTS[1].rot,
+              opacity: deck[idx + 1] ? SLOTS[1].o : 0,
+              filter: `blur(${SLOTS[1].blur}px)`,
+              duration: 0.48,
+              ease: "power3.out",
+            },
+            0,
+          )
+          // old mid recedes to the back slot (content stays = deck[idx+2] ✓)
+          .to(
+            oldMid,
+            {
+              x: SLOTS[2].x,
+              y: SLOTS[2].y,
+              scale: SLOTS[2].scale,
+              rotation: SLOTS[2].rot,
+              opacity: deck[idx + 2] ? SLOTS[2].o : 0,
+              filter: `blur(${SLOTS[2].blur}px)`,
+              duration: 0.48,
+              ease: "power3.out",
+            },
+            0,
+          );
+      }
+
+      // ─── DRAG ─────────────────────────────────────────────────────────────────────
+      const THRESH = 105;
+      let dX = 0,
+        dStartX = 0,
+        dragging = false;
+
+      function dragStart(x) {
+        if (busy || dead) return;
+        dragging = true;
+        dStartX = x;
+        dX = 0;
+        gsap.killTweensOf(stack[0]);
+      }
+
+      function lerp(a, b, t) {
+        return a + (b - a) * t;
+      }
+
+      function dragMove(x) {
+        if (!dragging || busy) return;
+        dX = x - dStartX;
+
+        const rot = Math.max(-12, Math.min(12, (dX / window.innerWidth) * 22));
+        gsap.set(stack[0], { x: dX, rotation: rot });
+
+        const p = Math.min(Math.abs(dX) / THRESH, 1);
+        gsap.set(stack[1], {
+          y: lerp(SLOTS[1].y, SLOTS[0].y, p),
+          scale: lerp(SLOTS[1].scale, SLOTS[0].scale, p),
+          rotation: lerp(SLOTS[1].rot, SLOTS[0].rot, p),
+          opacity: deck[idx + 1] ? lerp(SLOTS[1].o, 1, p) : 0,
+          filter: `blur(${lerp(SLOTS[1].blur, 0, p)}px)`,
+        });
+        gsap.set(stack[2], {
+          y: lerp(SLOTS[2].y, SLOTS[1].y, p),
+          scale: lerp(SLOTS[2].scale, SLOTS[1].scale, p),
+          rotation: lerp(SLOTS[2].rot, SLOTS[1].rot, p),
+          opacity: deck[idx + 2] ? lerp(SLOTS[2].o, SLOTS[1].o, p) : 0,
+          filter: `blur(${lerp(SLOTS[2].blur, SLOTS[1].blur, p)}px)`,
+        });
+
+        const st = stack[0].querySelectorAll(".stamp");
+        if (Math.abs(dX) > 36 && st.length) {
+          const op = Math.min((Math.abs(dX) - 36) / 52, 1);
+          gsap.set(dX > 0 ? st[0] : st[1], { opacity: op });
+          gsap.set(dX > 0 ? st[1] : st[0], { opacity: 0 });
+        } else if (st.length) {
+          gsap.set(st, { opacity: 0 });
+        }
+      }
+
+      function dragEnd() {
+        if (!dragging) return;
+        dragging = false;
+        const st = stack[0].querySelectorAll(".stamp");
+        if (st.length) gsap.set(st, { opacity: 0 });
+
+        if (Math.abs(dX) >= THRESH) {
+          goNext(dX < 0 ? "left" : "right");
+        } else {
+          gsap.to(stack[0], {
+            x: 0,
+            rotation: 0,
+            duration: 0.6,
+            ease: "elastic.out(1, 0.7)",
+          });
+          gsap.to(stack[1], {
+            y: SLOTS[1].y,
+            scale: SLOTS[1].scale,
+            rotation: SLOTS[1].rot,
+            opacity: deck[idx + 1] ? SLOTS[1].o : 0,
+            filter: `blur(${SLOTS[1].blur}px)`,
+            duration: 0.42,
+            ease: "power3.out",
+          });
+          gsap.to(stack[2], {
+            y: SLOTS[2].y,
+            scale: SLOTS[2].scale,
+            rotation: SLOTS[2].rot,
+            opacity: deck[idx + 2] ? SLOTS[2].o : 0,
+            filter: `blur(${SLOTS[2].blur}px)`,
+            duration: 0.42,
+            ease: "power3.out",
+          });
+        }
+        dX = 0;
+      }
+
+      stackEl.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        dragStart(e.clientX);
+      });
+      window.addEventListener("mousemove", (e) => dragMove(e.clientX));
+      window.addEventListener("mouseup", dragEnd);
+      stackEl.addEventListener(
+        "touchstart",
+        (e) => dragStart(e.touches[0].clientX),
+        { passive: true },
+      );
+      stackEl.addEventListener(
+        "touchmove",
+        (e) => dragMove(e.touches[0].clientX),
+        { passive: true },
+      );
+      stackEl.addEventListener("touchend", dragEnd);
+      stackEl.addEventListener("touchcancel", dragEnd);
+
+      btnBack.addEventListener("click", goBack);
+      btnNext.addEventListener("click", () => goNext("right"));
+      btnLeft.addEventListener("click", () => goNext("left"));
+      btnRight.addEventListener("click", () => goNext("right"));
+      btnRestart.addEventListener("click", init);
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowLeft") goNext("left");
+        else if (e.key === "ArrowRight") goNext("right");
+        else if (e.key === "ArrowUp" || e.key === "Backspace") goBack();
+      });
+
+      init();
+    </script>
+  </body>
+</html>
