@@ -190,9 +190,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        /* reserve the header band (top) and the controls band (bottom)
-           so the centred card never collides with the buttons */
-        padding: 84px 0 148px;
+        padding: 84px 0 130px;
       }
       #stack {
         position: relative;
@@ -336,7 +334,7 @@
       }
 
       .card-footer {
-        margin-top: 26px;
+        margin-top: 15px;
         position: relative;
       }
       .card-brand {
@@ -580,7 +578,7 @@
 
       @media (max-width: 768px) {
         :root {
-          --controls-lift: 65px;
+          --controls-lift: 50px;
         }
         #grain {
           display: none;
@@ -599,6 +597,15 @@
         }
         .card {
           contain: layout style paint;
+        }
+        .card-q {
+          font-size: clamp(24px, 2.8vw, 34px);
+          line-height: 1.26;
+        }
+        .card .quote {
+          font-size: min(42vw, 170px);
+          bottom: 48px;
+          right: 8px;
         }
       }
 
