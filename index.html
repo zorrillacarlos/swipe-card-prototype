@@ -43,6 +43,7 @@
         --text: #ffffff;
         --muted: rgba(255, 255, 255, 0.4);
         --font: "Oswald", system-ui, -apple-system, "Segoe UI", sans-serif;
+        --controls-lift: 96px;
       }
 
       html,
@@ -431,11 +432,13 @@
       /* ═══════════ CONTROLS ═══════════ */
       #controls {
         position: fixed;
-        bottom: 0;
+        bottom: max(
+          var(--controls-lift),
+          calc(env(safe-area-inset-bottom) + 12px)
+        );
         left: 0;
         right: 0;
         z-index: 20;
-        padding-bottom: max(32px, env(safe-area-inset-bottom));
         display: flex;
         justify-content: center;
         padding-left: 24px;
@@ -576,6 +579,9 @@
       }
 
       @media (max-width: 768px) {
+        :root {
+          --controls-lift: 65px;
+        }
         #grain {
           display: none;
         }
