@@ -181,7 +181,7 @@
         justify-content: center;
         /* reserve the header band (top) and the controls band (bottom)
            so the centred card never collides with the buttons */
-        padding: 84px 0 196px;
+        padding: 84px 0 148px;
       }
       #stack {
         position: relative;
@@ -427,43 +427,18 @@
         z-index: 20;
         padding-bottom: max(32px, env(safe-area-inset-bottom));
         display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 18px;
+        justify-content: center;
+        padding-left: 24px;
+        padding-right: 24px;
       }
-      #nav-top {
+      #nav-row {
         display: flex;
         align-items: center;
-        gap: 18px;
-      }
-
-      .arr-btn {
-        background: none;
-        border: none;
-        cursor: pointer;
-        color: var(--orange);
-        opacity: 0.85;
-        padding: 8px;
-        display: flex;
-        align-items: center;
-        transition:
-          opacity 0.2s,
-          transform 0.2s,
-          filter 0.2s;
-      }
-      .arr-btn:hover {
-        opacity: 1;
-      }
-      .arr-btn:active {
-        transform: scale(0.85);
-      }
-      .arr-btn svg {
-        width: 26px;
-        height: 26px;
-        display: block;
+        gap: 20px;
       }
 
       #btn-next {
+        margin-bottom: 18px;
         padding: 15px 36px;
         background: none;
         border: 1px solid rgba(255, 255, 255, 0.12);
@@ -489,17 +464,11 @@
         flex-direction: column;
         align-items: center;
         gap: 8px;
-        opacity: 0;
-        pointer-events: none;
-        transform: translateY(8px);
-        transition:
-          opacity 0.32s ease,
-          transform 0.32s ease;
+        flex-shrink: 0;
+        transition: opacity 0.28s ease;
       }
-      #nav-back.show {
-        opacity: 1;
-        pointer-events: auto;
-        transform: translateY(0);
+      #nav-back.is-disabled {
+        opacity: 0.38;
       }
       #btn-back {
         width: 50px;
@@ -516,11 +485,16 @@
           border-color 0.2s,
           transform 0.2s;
       }
-      #btn-back:hover {
+      #btn-back:hover:not(:disabled) {
         border-color: rgba(255, 121, 26, 0.55);
       }
-      #btn-back:active {
+      #btn-back:active:not(:disabled) {
         transform: scale(0.9);
+      }
+      #btn-back:disabled {
+        cursor: not-allowed;
+        border-color: rgba(255, 121, 26, 0.14);
+        color: rgba(255, 121, 26, 0.35);
       }
       #btn-back svg {
         width: 21px;
@@ -625,49 +599,23 @@
     </header>
 
     <div id="controls">
-      <div id="nav-top">
-        <button class="arr-btn" id="btn-left" aria-label="Next">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <polyline points="11 17 6 12 11 7" />
-            <polyline points="18 17 13 12 18 7" />
-          </svg>
-        </button>
-        <button id="btn-next">Swipe to next</button>
-        <button class="arr-btn" id="btn-right" aria-label="Next">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <polyline points="13 17 18 12 13 7" />
-            <polyline points="6 17 11 12 6 7" />
-          </svg>
-        </button>
-      </div>
-      <div id="nav-back">
-        <button id="btn-back" aria-label="Go back">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-        </button>
-        <span class="back-label">Back</span>
+      <div id="nav-row">
+        <div id="nav-back" class="is-disabled">
+          <button id="btn-back" type="button" disabled aria-label="Go back">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+          <span class="back-label">Back</span>
+        </div>
+        <button id="btn-next" type="button">Swipe to next</button>
       </div>
     </div>
 
@@ -922,8 +870,6 @@
       const navBack = document.getElementById("nav-back");
       const btnBack = document.getElementById("btn-back");
       const btnNext = document.getElementById("btn-next");
-      const btnLeft = document.getElementById("btn-left");
-      const btnRight = document.getElementById("btn-right");
       const btnRestart = document.getElementById("btn-restart");
 
       // ─── STATE ────────────────────────────────────────────────────────────────────
@@ -1011,8 +957,9 @@
       }
 
       function refreshBack() {
-        if (prevIdx !== null && !dead) navBack.classList.add("show");
-        else navBack.classList.remove("show");
+        const canBack = prevIdx !== null && !dead;
+        btnBack.disabled = !canBack;
+        navBack.classList.toggle("is-disabled", !canBack);
       }
 
       function layoutInstant() {
@@ -1040,7 +987,7 @@
         dead = false;
 
         endEl.classList.remove("show");
-        navBack.classList.remove("show");
+        refreshBack();
 
         layoutInstant();
 
@@ -1087,7 +1034,7 @@
               busy = false;
               els.forEach((e) => gsap.set(e, { opacity: 0 }));
               endEl.classList.add("show");
-              navBack.classList.remove("show");
+              refreshBack();
             },
           });
           gsap.to([stack[1], stack[2]], { opacity: 0, duration: 0.3 });
@@ -1346,8 +1293,6 @@
 
       btnBack.addEventListener("click", goBack);
       btnNext.addEventListener("click", () => goNext("right"));
-      btnLeft.addEventListener("click", () => goNext("left"));
-      btnRight.addEventListener("click", () => goNext("right"));
       btnRestart.addEventListener("click", init);
 
       document.addEventListener("keydown", (e) => {
