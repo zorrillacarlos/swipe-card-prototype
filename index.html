@@ -28,7 +28,7 @@
 
       :root {
         --bg: #07070a;
-        --orange: #ff8a4c;
+        --orange: #ff791a;
         --text: #ffffff;
         --muted: rgba(255, 255, 255, 0.4);
         --font: "Oswald", sans-serif;
@@ -152,7 +152,7 @@
         justify-content: center;
       }
       .logo {
-        line-height: 1.12;
+        line-height: 1.2;
         text-align: center;
         /* clean wordmark — no glow (per reference) */
       }
@@ -223,6 +223,11 @@
         will-change: transform, opacity, filter;
         transform-origin: 50% 118%; /* fan from bottom like a real deck */
         backface-visibility: hidden;
+        /* smooth the warm-edge fade when a card changes role
+           (border/shadow are CSS, not GSAP — safe to transition) */
+        transition:
+          border-color 0.4s ease,
+          box-shadow 0.4s ease;
       }
       /* FRONT card = clean dark silhouette (no edge glow — the sun is behind) */
       .card-front {
@@ -237,7 +242,7 @@
       }
       /* BACK cards — top edge only LIGHTLY more pronounced so they read */
       .card:not(.card-front) {
-        border-color: rgba(255, 138, 76, 0.3);
+        border-color: rgba(255, 121, 26, 0.3);
         box-shadow:
           0 0 0 1px rgba(255, 130, 60, 0.2),
           0 -2px 18px rgba(255, 110, 40, 0.16) inset,
@@ -266,7 +271,7 @@
         pointer-events: none;
         background-image: radial-gradient(
           circle,
-          rgba(255, 138, 76, 0.35) 1px,
+          rgba(255, 121, 26, 0.35) 1px,
           transparent 1px
         );
         background-size: 9px 9px;
@@ -325,7 +330,7 @@
       }
       .card-brand {
         margin-bottom: 18px;
-        line-height: 1.12;
+        line-height: 1.3;
       }
       .cb-en,
       .cb-ch {
@@ -344,7 +349,7 @@
         height: 1px;
         background: linear-gradient(
           90deg,
-          rgba(255, 138, 76, 0.35),
+          rgba(255, 121, 26, 0.35),
           transparent
         );
         margin-bottom: 14px;
@@ -365,7 +370,7 @@
         height: 44px;
         border-radius: 50%;
         background: radial-gradient(circle at 50% 35%, #1e1d24, #0e0d12);
-        border: 1px solid rgba(255, 138, 76, 0.32);
+        border: 1px solid rgba(255, 121, 26, 0.32);
         box-shadow:
           0 0 16px rgba(255, 110, 40, 0.3),
           inset 0 1px 0 rgba(255, 255, 255, 0.06);
@@ -501,7 +506,7 @@
         height: 50px;
         border-radius: 50%;
         background: none;
-        border: 1px solid rgba(255, 138, 76, 0.28);
+        border: 1px solid rgba(255, 121, 26, 0.28);
         color: var(--orange);
         cursor: pointer;
         display: flex;
@@ -512,7 +517,7 @@
           transform 0.2s;
       }
       #btn-back:hover {
-        border-color: rgba(255, 138, 76, 0.55);
+        border-color: rgba(255, 121, 26, 0.55);
       }
       #btn-back:active {
         transform: scale(0.9);
@@ -563,10 +568,10 @@
         padding: 15px 34px;
         background: radial-gradient(
           circle at 50% 0%,
-          rgba(255, 138, 76, 0.18),
-          rgba(255, 138, 76, 0.07)
+          rgba(255, 121, 26, 0.18),
+          rgba(255, 121, 26, 0.07)
         );
-        border: 1px solid rgba(255, 138, 76, 0.3);
+        border: 1px solid rgba(255, 121, 26, 0.3);
         border-radius: 100px;
         font-family: var(--font);
         font-size: 11px;
@@ -581,8 +586,8 @@
       #btn-restart:hover {
         background: radial-gradient(
           circle at 50% 0%,
-          rgba(255, 138, 76, 0.28),
-          rgba(255, 138, 76, 0.12)
+          rgba(255, 121, 26, 0.28),
+          rgba(255, 121, 26, 0.12)
         );
       }
     </style>
@@ -614,8 +619,8 @@
 
     <header id="header">
       <div class="logo">
-        <span class="logo-en">English</span>
-        <span class="logo-ch">chévere</span>
+        <span class="logo-en">ENGLISH</span>
+        <span class="logo-ch">CHÉVERE</span>
       </div>
     </header>
 
@@ -673,61 +678,217 @@
           cat: "LIFE",
           icon: "person",
           q: "If money and time were no object, what skill would you master tomorrow?",
-          sp: { h: "@coffeelab", t: "Great coffee, better talks." },
+          sp: { h: "@aetherlabs", t: "New Era. New Minds." },
         },
         {
-          cat: "HABITS",
+          cat: "LIFE",
+          icon: "mind",
+          q: "If you could change one thing about how you were raised, what would it be?",
+          sp: { h: "@aetherlabs", t: "New Era. New Minds." },
+        },
+        {
+          cat: "FAMILY",
+          icon: "person",
+          q: 'Are you the "responsible one" or the "adventurous one" in your family?',
+          sp: { h: "@aetherlabs", t: "New Era. New Minds." },
+        },
+        {
+          cat: "HOBBIES",
           icon: "leaf",
-          q: "Are you a planner or do you prefer to see where the day takes you?",
-          sp: null,
+          q: "Do you prefer hobbies that are creative, athletic, or intellectual?",
+          sp: { h: "@aetherlabs", t: "New Era. New Minds." },
         },
         {
-          cat: "ROUTINES",
-          icon: "sun",
-          q: "What's your dream morning routine?",
-          sp: { h: "@morningbrew", t: "Start every day inspired." },
-        },
-        {
-          cat: "CHOICES",
-          icon: "split",
-          q: "Would you rather live without music or without internet?",
-          sp: null,
-        },
-        {
-          cat: "CONNECTION",
-          icon: "chat",
-          q: "What's the best conversation you've had this week?",
-          sp: { h: "@coffeelab", t: "Great coffee, better talks." },
-        },
-        {
-          cat: "LANGUAGE",
-          icon: "globe",
-          q: "If you could master any language in 30 days, which would it be and why?",
-          sp: null,
-        },
-        {
-          cat: "GROWTH",
+          cat: "SKILLS",
           icon: "arrow",
-          q: "What's one habit you wish you'd started 5 years ago?",
+          q: "If you had to teach a 30-minute class on any topic, what would it be?",
+          sp: { h: "@aetherlabs", t: "New Era. New Minds." },
+        },
+        {
+          cat: "WORK",
+          icon: "person",
+          q: "What was your very first job, and what did you learn from it?",
+          sp: null,
+        },
+        {
+          cat: "FRIENDSHIP",
+          icon: "chat",
+          q: 'What is a "dealbreaker" for you in a friendship?',
+          sp: null,
+        },
+        {
+          cat: "LIFESTYLE",
+          icon: "sun",
+          q: "If you could retire tomorrow, what would you do with your days?",
+          sp: null,
+        },
+        {
+          cat: "ETHICS",
+          icon: "split",
+          q: "If you find a wallet with $500 and no ID, is it yours?",
+          sp: null,
+        },
+        {
+          cat: "TRAVEL",
+          icon: "leaf",
+          q: "Are you a city sleeper or a nature seeker?",
+          sp: null,
+        },
+        {
+          cat: "CAREER",
+          icon: "arrow",
+          q: "If you could switch careers with anyone for one week, who would it be?",
           sp: null,
         },
         {
           cat: "MINDSET",
           icon: "mind",
-          q: "Do you believe people can truly change, or do they just adapt?",
-          sp: { h: "@morningbrew", t: "Start every day inspired." },
-        },
-        {
-          cat: "LIFE",
-          icon: "person",
-          q: "When did you last do something for the very first time?",
+          q: 'Does "luck" exist, or do we create our own opportunities?',
           sp: null,
         },
         {
-          cat: "CHOICES",
+          cat: "TRAVEL",
+          icon: "globe",
+          q: 'What is the most "culture shock" you’ve ever experienced?',
+          sp: null,
+        },
+        {
+          cat: "LIFESTYLE",
+          icon: "sun",
+          q: "Would you rather live in a high-tech smart home or a cozy cabin in the woods?",
+          sp: null,
+        },
+        {
+          cat: "TRAVEL",
+          icon: "globe",
+          q: "What is the most beautiful place you’ve ever seen in person?",
+          sp: null,
+        },
+        {
+          cat: "SCIENCE",
           icon: "split",
-          q: "If you could only keep three apps on your phone, which would you choose?",
-          sp: { h: "@coffeelab", t: "Great coffee, better talks." },
+          q: "Is it better to explore the deep ocean or outer space?",
+          sp: null,
+        },
+        {
+          cat: "ROUTINES",
+          icon: "sun",
+          q: 'What is your "dream" morning routine?',
+          sp: null,
+        },
+        {
+          cat: "ETHICS",
+          icon: "mind",
+          q: 'Should you report a coworker for a small "theft"? (your coworker is your friend).',
+          sp: null,
+        },
+        {
+          cat: "CHILDHOOD",
+          icon: "person",
+          q: "Are you the child who followed the rules or the one who constantly challenged them?",
+          sp: null,
+        },
+        {
+          cat: "FOOD",
+          icon: "chat",
+          q: 'What is the most iconic "Street Food" spot in the city that everyone must visit once?',
+          sp: null,
+        },
+        {
+          cat: "CITY LIFE",
+          icon: "sun",
+          q: 'What is your favorite "plan" for a Sunday afternoon in the city?',
+          sp: null,
+        },
+        {
+          cat: "TRADITIONS",
+          icon: "mind",
+          q: 'What is a "superstition" your parents or grandparents believe in?',
+          sp: null,
+        },
+        {
+          cat: "FAMILY",
+          icon: "person",
+          q: "What is one tradition you want to make sure you pass down to your children?",
+          sp: null,
+        },
+        {
+          cat: "WORK",
+          icon: "arrow",
+          q: "Do you prefer working for a big company or being your own boss?",
+          sp: null,
+        },
+        {
+          cat: "CITY",
+          icon: "globe",
+          q: "If you were the Mayor for one day, what is the first thing you would fix?",
+          sp: null,
+        },
+        {
+          cat: "REMOTE WORK",
+          icon: "globe",
+          q: 'What is your "dream" remote job that would allow you to travel the world?',
+          sp: null,
+        },
+        {
+          cat: "ETHICS",
+          icon: "mind",
+          q: "Is it ethical to test life-saving medicine on animals?",
+          sp: null,
+        },
+        {
+          cat: "SPORTS",
+          icon: "arrow",
+          q: "If you could be a professional athlete in any sport, which would it be?",
+          sp: null,
+        },
+        {
+          cat: "PRODUCTIVITY",
+          icon: "mind",
+          q: "How do you stay motivated and productive during a power outage or internet failure?",
+          sp: null,
+        },
+        {
+          cat: "BUSINESS",
+          icon: "arrow",
+          q: "If you could open a small business tomorrow, what would you sell?",
+          sp: null,
+        },
+        {
+          cat: "ENTERTAINMENT",
+          icon: "chat",
+          q: 'Do you prefer watching a movie at home or going to the cinema for the "experience"?',
+          sp: null,
+        },
+        {
+          cat: "ART",
+          icon: "person",
+          q: "If you could meet any famous artist (living or dead), who would it be?",
+          sp: null,
+        },
+        {
+          cat: "ROUTINES",
+          icon: "sun",
+          q: 'Are you a "planner" or do you prefer to see where the day takes you?',
+          sp: null,
+        },
+        {
+          cat: "TECH",
+          icon: "split",
+          q: "If you had to delete every app on your phone except for three, which would stay?",
+          sp: null,
+        },
+        {
+          cat: "LIFE",
+          icon: "mind",
+          q: "Is it better to have a life full of stability or a life full of adventure?",
+          sp: null,
+        },
+        {
+          cat: "TECH",
+          icon: "globe",
+          q: "Should there be a legal minimum age for owning a smartphone?",
+          sp: null,
         },
       ];
 
@@ -809,8 +970,8 @@
     <p class="card-q">${d.q}</p>
     <div class="card-footer">
       <div class="card-brand">
-        <span class="cb-en">English</span>
-        <span class="cb-ch">chévere</span>
+        <span class="cb-en">ENGLISH</span>
+        <span class="cb-ch">CHÉVERE</span>
       </div>
       ${sp}
     </div>`;
